@@ -1,7 +1,7 @@
 local codec=require("cabin_codec")
 local storage=require("cabin_store")
 local M={}
-local IDS={cabin_fast_turns=true,cabin_short_events=true}
+local IDS={cabin_fast_turns=true,cabin_short_events=true,cabin_lobby_pets=true}
 local serial=0
 local function path()
     local directory=IterateGameDirectories().Game.Binaries.Win64.__absolute_path
