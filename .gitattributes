@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.pak binary
+*.utoc binary
+*.ucas binary

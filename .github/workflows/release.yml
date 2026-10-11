@@ -1,0 +1,64 @@
+name: Release and update Nexus
+on:
+  workflow_dispatch:
+    inputs:
+      publish_nexus:
+        description: Update the existing Nexus Main File (inspect Nexus before retry)
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: release-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python tests/check_lua.py
+      - name: Require game acceptance and build release
+        run: python tools/package.py --release
+      - name: Publish or verify the GitHub release
+        id: target
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PUBLISH_NEXUS: ${{ inputs.publish_nexus }}
+          NEXUS_FILE_GROUP_ID: ${{ vars.NEXUS_FILE_GROUP_ID }}
+          NEXUS_MOD_ID: ${{ vars.NEXUS_MOD_ID }}
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: python tools/release.py
+      - name: Upload to Nexus Mods
+        id: nexus
+        if: steps.target.outputs.nexus_ready == 'true'
+        uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUS_FILE_GROUP_ID }}
+          filename: ${{ steps.target.outputs.asset }}
+          version: ${{ steps.target.outputs.version }}
+          display_name: ${{ steps.target.outputs.display_name }}
+          description: ${{ steps.target.outputs.notes }}
+          mod_id: ${{ vars.NEXUS_MOD_ID }}
+          changelog: ${{ steps.target.outputs.notes }}
+          category: main
+          allow_mod_manager_download: ${{ vars.NEXUS_VORTEX_READY == 'true' }}
+          primary_mod_manager_download: ${{ vars.NEXUS_VORTEX_READY == 'true' }}
+          show_requirements_pop_up: true
+          archive_existing_version: true
+          update_mod_version: true
+      - name: Record Nexus acknowledgement
+        if: steps.target.outputs.nexus_ready == 'true'
+        env:
+          VERSION_ID: ${{ steps.nexus.outputs.version_id }}
+        run: |
+          if [ -z "$VERSION_ID" ]; then
+            echo "::error::Nexus returned no uploaded version ID; inspect Nexus before retry"
+            exit 1
+          fi
+          echo "Nexus confirmed version ID: $VERSION_ID" >> "$GITHUB_STEP_SUMMARY"

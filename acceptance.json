@@ -1,0 +1,32 @@
+{
+  "accepted": false,
+  "payload_sha256": "1d8cfe1f347b384a35ad1b39a870f3a83ef8478aae596653563c9bee3eba71ec",
+  "game_build": "25553694",
+  "ue4ss": "v3.0.1-1164-g5e627997",
+  "checks": {
+    "gameplay": {
+      "passed": false,
+      "evidence": ""
+    },
+    "installation": {
+      "passed": false,
+      "evidence": ""
+    },
+    "integration": {
+      "passed": false,
+      "evidence": ""
+    },
+    "multiplayer": {
+      "passed": false,
+      "evidence": ""
+    },
+    "settings": {
+      "passed": false,
+      "evidence": ""
+    },
+    "single_mod": {
+      "passed": false,
+      "evidence": ""
+    }
+  }
+}
