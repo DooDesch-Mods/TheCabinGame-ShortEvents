@@ -17,6 +17,14 @@ def run(*args):
     return result.stdout
 
 
+def require_tag_target(repository, tag, commit):
+    refs = json.loads(run("gh", "api", f"repos/{repository}/git/matching-refs/tags/{tag}"))
+    if any(ref["ref"] == "refs/tags/" + tag for ref in refs):
+        actual = json.loads(run("gh", "api", f"repos/{repository}/commits/{tag}"))["sha"]
+        if actual != commit:
+            raise ValueError(f"existing tag {tag} targets {actual}, expected {commit}; release blocked")
+
+
 def main():
     package.require_acceptance()
     archive = package.ROOT / "dist" / f"{package.MOD}-{package.VERSION}.zip"
@@ -38,6 +46,7 @@ def main():
         print("info: Nexus upload not requested")
     repository = os.environ["GITHUB_REPOSITORY"]
     tag = "v" + package.VERSION
+    require_tag_target(repository, tag, os.environ["GITHUB_SHA"])
     pages = json.loads(run("gh", "api", f"repos/{repository}/releases", "--paginate", "--slurp"))
     releases = [release for page in pages for release in page]
     existing = next((release for release in releases if release["tag_name"] == tag), None)
