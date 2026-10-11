@@ -67,12 +67,12 @@ def contents(candidate=True):
     for name in ["README.md", "LICENSE.md", "CHANGELOG.md"]:
         files[name] = (ROOT / name).read_bytes()
     if (ROOT / "profile_templates.json").exists():
-        files["profile_templates.json"] = (ROOT / "profile_templates.json").read_bytes()
+        files["README.profile_templates.json"] = (ROOT / "profile_templates.json").read_text(encoding="utf-8").encode("utf-8")
     manifest = {"mod": MOD, "version": VERSION + ("-candidate" if candidate else ""),
                 "game_build": CONFIG["game_build"], "ue4ss": CONFIG["ue4ss"],
                 "game_acceptance": not candidate, "payload_sha256": fingerprint(),
                 "files": {name: hashlib.sha256(data).hexdigest() for name, data in sorted(files.items())}}
-    files["manifest.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
+    files["README.manifest.json"] = (json.dumps(manifest, indent=2, sort_keys=True) + "\n").encode()
     return dict(sorted(files.items()))
 
 

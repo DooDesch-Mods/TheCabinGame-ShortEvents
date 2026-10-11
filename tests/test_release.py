@@ -53,6 +53,8 @@ class ReleaseTests(unittest.TestCase):
         self.assertTrue(all(name.startswith(f"Mods/{package.MOD}/") or name.startswith("the_cabin_game/Content/Paks/~mods/") for name in files))
         self.assertFalse(any(Path(name).name in {"mods.txt", "mods.json", "UE4SS.dll", "UE4SS-settings.ini"} for name in files))
         self.assertEqual(package.fingerprint(files), json.loads((package.ROOT / "acceptance.json").read_text())["payload_sha256"])
+        metadata = set(package.contents()) - set(files)
+        self.assertTrue(all(name.startswith(("README", "LICENSE", "CHANGELOG")) and "/" not in name for name in metadata))
 
 
 if __name__ == "__main__":
