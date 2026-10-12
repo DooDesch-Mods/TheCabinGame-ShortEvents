@@ -25,9 +25,46 @@ def api(method, path, payload=None):
     try:
         with urllib.request.urlopen(request, timeout=45) as response:
             body = response.read()
-            return json.loads(body)["data"] if body else None
+            response_type = str(response.headers.get("Content-Type", "missing")).replace(key, "[redacted]")
+            context = f"HTTP {response.status}; Content-Type={response_type}; fields=unavailable"
+            if not body:
+                if response.status == 204:
+                    return None
+                raise RuntimeError(f"error: Nexus {method} {path}: empty response; required=JSON object; {context}")
+            try:
+                answer = json.loads(body)
+            except (json.JSONDecodeError, UnicodeDecodeError) as cause:
+                reason = cause.msg if isinstance(cause, json.JSONDecodeError) else cause.reason
+                raise RuntimeError(f"error: Nexus {method} {path}: invalid response JSON: {reason}; {context}") from cause
+            if not isinstance(answer, dict):
+                raise RuntimeError(f"error: Nexus {method} {path}: response is not a JSON object; {context}")
+            fields = json.dumps(sorted(answer)).replace(key, "[redacted]")
+            context = f"HTTP {response.status}; Content-Type={response_type}; fields={fields}"
+            if all(name in answer for name in ("type", "title", "status", "detail", "instance")):
+                detail = str(answer["detail"]).replace(key, "[redacted]")[:400]
+                raise RuntimeError(f"error: Nexus {method} {path}: API status={answer['status']}; {detail}; {context}")
+            flat = path.endswith(("/dependencies/ranges", "/dependencies/dlc"))
+            data = answer if flat else answer.get("data")
+            if not isinstance(data, dict):
+                shape = "errorData response" if "errorData" in answer else "missing or invalid data object"
+                raise RuntimeError(f"error: Nexus {method} {path}: {shape}; {context}; inspect Nexus before retry")
+            field = ("dependency_definitions" if path.endswith("/dependencies/ranges") else
+                     "dlc_dependency_definitions" if path.endswith("/dependencies/dlc") else
+                     "mods" if path == "/mods/batch" else
+                     "mod_files" if path.endswith("/files") else
+                     "versions" if path.endswith("/versions") else None)
+            if field and not isinstance(data.get(field), list):
+                raise RuntimeError(f"error: Nexus {method} {path}: missing or invalid {field} array; {context}")
+            return data
     except urllib.error.HTTPError as cause:
-        raise RuntimeError(f"error: Nexus {method} {path}: HTTP {cause.code}; inspect Nexus before retry") from cause
+        try:
+            problem = json.loads(cause.read())
+        except (json.JSONDecodeError, UnicodeDecodeError) as decode:
+            reason = decode.msg if isinstance(decode, json.JSONDecodeError) else decode.reason
+            raise RuntimeError(f"error: Nexus {method} {path}: HTTP {cause.code}; invalid problem JSON: {reason}") from cause
+        detail = problem.get("detail") if isinstance(problem, dict) else None
+        reason = (detail if isinstance(detail, str) else str(cause.reason)).replace(key, "[redacted]")[:400]
+        raise RuntimeError(f"error: Nexus {method} {path}: HTTP {cause.code}; {reason}; inspect Nexus before retry") from cause
     except urllib.error.URLError as cause:
         raise RuntimeError(f"error: Nexus {method} {path}: {cause.reason}; inspect Nexus before retry") from cause
 
