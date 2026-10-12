@@ -20,7 +20,7 @@ def payload():
         if not path.is_file():
             continue
         relative = path.relative_to(ROOT).as_posix()
-        if path.name not in {"enabled.txt"} and path.suffix != ".lua":
+        if path.name != "enabled.txt" and path != ROOT / "Mods" / MOD / "mod-info.ini" and path.suffix != ".lua":
             raise ValueError(f"unexpected runtime file: {relative}")
         result[relative] = path.read_bytes()
     for required in [f"Mods/{MOD}/enabled.txt", f"Mods/{MOD}/Scripts/main.lua"]:
