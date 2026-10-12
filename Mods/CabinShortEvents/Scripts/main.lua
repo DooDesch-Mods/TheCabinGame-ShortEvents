@@ -6,7 +6,7 @@ local targets = require("targets")
 local mod = runtime.start(directory,require("definition"))
 require("cabin_host_settings").start(mod)
 local rounds, announced = {}, {}
-mod:bind("/Game/CabinGameContent/BoardGameStuff/GameBoard_BP.GameBoard_BP_C:SetCurrentPlayerTurn",function(context)
+mod:bind("/Game/CabinGameContent/BoardGameStuff/Board/GameBoard_BP.GameBoard_BP_C:SetCurrentPlayerTurn",function(context)
     local board = context:get()
     if not runtime.valid(board) or not board:HasAuthority() then return end
     local world = board:GetWorld()
