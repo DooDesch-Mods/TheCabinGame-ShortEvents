@@ -1,0 +1,77 @@
+name: Update unpublished Nexus file
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: Update the unpublished file after checking its current state
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+    paths:
+      - 'Mods/**'
+      - 'Paks/**'
+      - 'profile_templates/**'
+      - 'package.json'
+      - 'acceptance.json'
+      - 'README.md'
+      - 'LICENSE.md'
+      - 'CHANGELOG.md'
+      - 'tools/package.py'
+permissions:
+  contents: read
+concurrency:
+  group: nexus-${{ github.repository }}
+  cancel-in-progress: false
+jobs:
+  draft:
+    runs-on: ubuntu-latest
+    env:
+      NEXUS_MOD_ID: ${{ vars.NEXUS_MOD_ID }}
+      NEXUS_FILE_GROUP_ID: ${{ vars.NEXUS_FILE_GROUP_ID }}
+      NEXUS_GAME_SCOPED_ID: ${{ vars.NEXUS_GAME_SCOPED_ID }}
+      NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-python@v7.0.0
+        with:
+          python-version: '3.13'
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m unittest discover -s tests -v
+      - run: python tests/check_lua.py
+      - name: Build current candidate or require game acceptance
+        run: |
+          python -c "import json,subprocess,sys; accepted=json.load(open('acceptance.json'))['accepted']; subprocess.run([sys.executable,'tools/package.py']+(['--release'] if accepted else []),check=True)"
+      - name: Guard unpublished parent and capture file requirements
+        id: target
+        run: python tools/nexus_draft.py preflight
+      - name: Update the existing unpublished file
+        id: nexus
+        if: steps.target.outputs.ready == 'true' && (github.event_name == 'push' || inputs.upload)
+        uses: Nexus-Mods/upload-action@c96019556046053aa26044b44396cd38929daf23
+        with:
+          api_key: ${{ secrets.NEXUSMODS_API_KEY }}
+          file_id: ${{ vars.NEXUS_FILE_GROUP_ID }}
+          mod_id: ${{ vars.NEXUS_MOD_ID }}
+          filename: ${{ steps.target.outputs.asset }}
+          version: ${{ steps.target.outputs.version }}
+          display_name: ${{ steps.target.outputs.display_name }}
+          description: Prepared file for the unpublished mod page.
+          category: main
+          allow_mod_manager_download: false
+          primary_mod_manager_download: false
+          show_requirements_pop_up: true
+          archive_existing_version: true
+          update_mod_version: false
+      - name: Verify uploaded file and preserve file-to-file requirements
+        if: steps.target.outputs.ready == 'false' || github.event_name == 'push' || inputs.upload
+        env:
+          NEXUS_VERSION_ID: ${{ steps.nexus.outputs.version_id }}
+        run: python tools/nexus_draft.py verify
+      - name: Save update receipt
+        if: always()
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: nexus-draft-receipt
+          path: dist/nexus-draft.json
+          if-no-files-found: warn
