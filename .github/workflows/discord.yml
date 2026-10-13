@@ -38,6 +38,7 @@ jobs:
           PRODUCT_NAME: Cabin Short Events
           PRODUCT_SUMMARY: Reduces balloon and train task goals by about one third.
           PRODUCT_SUPPORT: https://support.doodesch.de/shortevents
+          NEXUS_MOD_URL: ${{ vars.NEXUS_MOD_URL }}
           PRODUCT_THUMBNAIL: https://raw.githubusercontent.com/DooDesch-Mods/TheCabinGame-ShortEvents/main/docs/thumbnail.png
         run: python tools/announce-release.py
       - name: Keep Discord acknowledgement
