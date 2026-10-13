@@ -5,9 +5,9 @@ import os
 from pathlib import Path
 import subprocess
 import tempfile
-import urllib.request
 
 import package
+import nexus_release
 import release_notes
 
 
@@ -39,11 +39,7 @@ def main():
         key = os.environ.get("NEXUSMODS_API_KEY", "")
         if not file_id.isdecimal() or not mod_id.isdecimal() or not key:
             raise ValueError("Nexus upload requested but numeric target IDs or organization secret are missing")
-        request = urllib.request.Request(f"https://api.nexusmods.com/v3/mods/{mod_id}/files", headers={"apikey": key, "accept": "application/json"})
-        with urllib.request.urlopen(request, timeout=30) as response:
-            files = json.load(response)["data"]["mod_files"]
-        if not any(str(file["id"]) == file_id for file in files):
-            raise ValueError(f"Nexus file group {file_id} does not belong to mod {mod_id}")
+        nexus_release.preflight(archive, package.VERSION)
         print(f"info: confirmed Nexus target mod={mod_id} file_group={file_id}")
     else:
         print("info: Nexus upload not requested")

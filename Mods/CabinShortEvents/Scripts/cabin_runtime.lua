@@ -2,6 +2,17 @@ local storage = require("cabin_store")
 local registry = require("cabin_registry")
 local M = {}
 function M.valid(object) return object and object:IsValid() end
+local function loading(object)
+    assert(type(EObjectFlags)=="table","required pinned UObject flags unavailable")
+    local mask=0
+    for _,name in ipairs({"RF_NeedInitialization","RF_NeedLoad","RF_NeedPostLoad","RF_NeedPostLoadSubobjects"}) do
+        assert(math.type(EObjectFlags[name])=="integer","required pinned UObject flag unavailable: " .. name)
+        mask=mask | EObjectFlags[name]
+    end
+    local pending=object:HasAnyFlags(mask)
+    assert(type(pending)=="boolean","UObject loading flag readback invalid")
+    return pending
+end
 function M.start(directory,definition)
     local self = {definition=definition,hooks={},observers={}}
     function self:log(level,message) print("[" .. definition.name .. "] " .. level .. ": " .. message .. "\n") end
@@ -29,8 +40,20 @@ function M.start(directory,definition)
         assert(IsInGameThread(),"runtime callback outside game thread")
         self.registry:poll()
         for path,hook in pairs(self.hooks) do
-            if not hook.bound and not hook.failed and M.valid(StaticFindObject(path)) then
+            local target=not hook.bound and not hook.failed and StaticFindObject(path)
+            if M.valid(target) then
                 local ok,cause = pcall(function()
+                    -- RegisterHook allocates Lua references before rejecting an unbound UFunction.
+                    local outer=target:GetOuter()
+                    local reason=loading(target) and "UFunction load/postload pending" or M.valid(outer) and loading(outer) and "outer load/postload pending"
+                    if reason then
+                        hook.waiting_count=(hook.waiting_count or 0)+1
+                        if hook.waiting_reason~=reason then
+                            hook.waiting_reason=reason
+                            log("info","bind waiting: " .. path .. "; " .. reason)
+                        end
+                        return
+                    end
                     local callback = function(...)
                         local result = table.pack(xpcall(hook.callback,debug.traceback,...))
                         if not result[1] then
@@ -45,9 +68,13 @@ function M.start(directory,definition)
                     else first,second = RegisterHook(path,callback) end
                     assert(type(first)=="number" and type(second)=="number","hook registration IDs unavailable")
                     hook.ids,hook.bound = {first,second},true
+                    if hook.waiting_count then
+                        log("info","bind readiness recovered: " .. path .. "; skipped polls=" .. hook.waiting_count)
+                        hook.waiting_reason=nil
+                    end
                     log("info","hook bound: " .. path)
                 end)
-                if not ok then hook.failed=true; log("error","bind " .. path .. ": " .. tostring(cause)) end
+                if not ok then hook.failed=true;hook.error=tostring(cause); log("error","bind " .. path .. ": " .. tostring(cause)) end
             end
         end
         for name,observer in pairs(self.observers) do

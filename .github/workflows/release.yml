@@ -6,6 +6,10 @@ on:
         description: Update the existing Nexus Main File (inspect Nexus before retry)
         type: boolean
         default: false
+      announce_discord:
+        description: Announce the release after the Nexus page is public
+        type: boolean
+        default: true
 permissions:
   contents: write
   actions: write
@@ -53,18 +57,23 @@ jobs:
           show_requirements_pop_up: true
           archive_existing_version: true
           update_mod_version: true
-      - name: Record Nexus acknowledgement
+      - name: Verify Nexus acknowledgement and preserve file requirements
         if: steps.target.outputs.nexus_ready == 'true'
         env:
-          VERSION_ID: ${{ steps.nexus.outputs.version_id }}
-        run: |
-          if [ -z "$VERSION_ID" ]; then
-            echo "::error::Nexus returned no uploaded version ID; inspect Nexus before retry"
-            exit 1
-          fi
-          echo "Nexus confirmed version ID: $VERSION_ID" >> "$GITHUB_STEP_SUMMARY"
+          NEXUS_VERSION_ID: ${{ steps.nexus.outputs.version_id }}
+          NEXUS_FILE_GROUP_ID: ${{ vars.NEXUS_FILE_GROUP_ID }}
+          NEXUS_MOD_ID: ${{ vars.NEXUS_MOD_ID }}
+          NEXUSMODS_API_KEY: ${{ secrets.NEXUSMODS_API_KEY }}
+        run: python tools/nexus_release.py
+      - name: Save Nexus release receipt
+        if: always() && inputs.publish_nexus
+        uses: actions/upload-artifact@v6.0.0
+        with:
+          name: nexus-release-receipt
+          path: dist/nexus-release.json
+          if-no-files-found: warn
       - name: Dispatch Discord announcement
-        if: success()
+        if: success() && inputs.announce_discord
         env:
           GH_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}

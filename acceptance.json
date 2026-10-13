@@ -1,32 +1,32 @@
 {
-  "accepted": false,
-  "payload_sha256": "aa028eac3e921754f3d315ea2af1488c0c9d21b5e91d39aea945e92121cfee00",
+  "accepted": true,
+  "payload_sha256": "711800c65b71b97177cd0a9c6b6fdb9e5187c9e04afb56640f240b07e8ff12d9",
   "game_build": "25553694",
   "ue4ss": "v3.0.1-1164-g5e627997",
   "checks": {
     "gameplay": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Actual reduced Train/Balloon goals consumed by original interactions, at least one actual Train/Card Win and actual Enemy Win/Card End. Scripted original scenes; no natural Draw or physical-hit claim."
     },
     "installation": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Frozen archive plus exact primary runtime bytes and immutable installed Short payload in both single-mod roles and retained all-eight pair."
     },
     "integration": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Unchanged all-eight runtime/installation, native Train goal plus seven original inserts, native Balloon goal plus Gold spawn and peer continuation; original failure remains retained."
     },
     "multiplayer": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Host native event success, replicated peer non-authority event card and acknowledged original peer BeginTurn with fresh native turn-state continuation; no peer counter/goal claim."
     },
     "settings": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Original Short numeric factors .83/.67 Apply/reopen, disabled Apply/reopen with preserved factors, Defaults enabled true and original 2/3 factors Apply/reopen; saved payload hashes and exact native ACKs. Earlier native quantization/Cancel retained separately. Host next-round behavior retained by original-world evidence."
     },
     "single_mod": {
-      "passed": false,
-      "evidence": ""
+      "passed": true,
+      "evidence": "_drafts/nexus-rollout/short-acceptance-candidate/evidence-candidate.json - Exact frozen Short-only plus Diagnostic, two native original-event runs, both roles and clean exits."
     }
   }
 }

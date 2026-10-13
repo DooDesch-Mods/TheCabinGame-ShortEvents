@@ -1,19 +1,13 @@
 # Publishing
 
-Do not publish before the exact runtime payload passes game acceptance. Record six checks in `acceptance.json`: each mod alone, Settings, gameplay, multiplayer, integration and installation. Every passed check names its log, screenshot or other observed evidence. Packaging checks do not replace game acceptance. The payload hash must match the tested Lua and overlay bytes.
+Release only after the exact runtime payload has genuine evidence for all six checks in acceptance.json. accepted remains false while native or host/peer acceptance is open. Candidate builds do not require acceptance and do not authorize publication.
 
-CI builds candidates on Linux and Windows. Both archive hashes must match the local build. The manual Release and update Nexus workflow repeats checks, requires acceptance, builds the release and verifies its public tag and downloaded ZIP/checksum. It never runs on a normal push.
+Use the manual release workflow with publish_nexus enabled for the combined GitHub/Nexus release. Do not create the GitHub release manually first. The workflow validates acceptance, creates or verifies the canonical tag and ZIP/checksum, captures the latest Main File requirements, uploads through the pinned Nexus action, then verifies the acknowledged version and file-to-file ranges before dispatching one Discord announcement.
 
-For the first Nexus release, create the mod page and Main File from the accepted ZIP and prepared description. Then configure repository variables:
+The existing organization secrets NEXUSMODS_API_KEY and DISCORD_RELEASE_WEBHOOK stay in GitHub Secrets. Configure NEXUS_MOD_ID and NEXUS_FILE_GROUP_ID for this exact mod and its existing Main File. NEXUS_VORTEX_READY is true only after an actual manager download and deployment pass.
 
-| Variable | Value |
-|---|---|
-| NEXUS_FILE_GROUP_ID | Numeric API File ID from Main File > Advanced |
-| NEXUS_MOD_ID | Numeric Unique Mod ID from the same panel |
-| NEXUS_VORTEX_READY | true only after this mod's actual Nexus/Vortex download and deployment pass |
+The release helper supports published and unpublished parents. It preserves the existing UE4SS minimum file version 45363444580354 through Latest and retains dist/nexus-release.json as a CI artifact. It verifies the configured mod, file group, canonical version and exact requirements readback. The receipt distinguishes local archive verification from an unconfirmed remote archive hash.
 
-Use the existing organization secret NEXUSMODS_API_KEY. Its value stays in GitHub Secrets. Later releases use the workflow's publish_nexus option. It verifies that the file group belongs to the configured Nexus mod before upload and requires Nexus's version ID after upload.
+After failure or timeout, inspect retained receipts and the actual GitHub/Nexus state before retrying. Existing Nexus versions and changed tags or archives block automatic overwrite. Do not dispatch Discord again for an already announced release.
 
-The first GitHub release can run with publish_nexus disabled. An existing release is reused only if its tag and uploaded bytes match this exact commit. Failed or unclear Nexus uploads must be inspected on Nexus before another upload; do not replay a timed-out upload automatically.
-
-Do not include the game, UE4SS runtime, diagnostics, settings, original extracted assets or private Rejoin copies in a repository or archive. Review the compiled mod overlay inputs when they change.
+No game files, loader binaries, diagnostics, user settings or extracted original assets belong in the release ZIP.
