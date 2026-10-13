@@ -1,3 +1,10 @@
-Reduces balloon and train tasks by about one third. Original difficulty and player count still determine the starting goal.
+## Changes in 0.1.0
 
-Requires UE4SS v3.0.1-1164-g5e627997 and Steam build 25553694.
+### Added
+
+- Reduce balloon and train tasks by about one third.
+- Keep the original difficulty and player count when calculating the starting goal.
+
+Game and multiplayer acceptance are pending.
+
+For manual installation and requirements, see README.md in the ZIP.
