@@ -2,6 +2,8 @@
 
 > 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/shortevents](https://support.doodesch.de/shortevents).
 
+[![Discord](https://mods.doodesch.de/img/badge.png)](https://mods.doodesch.de)
+
 Reduces balloon and train tasks by about one third. Original difficulty and player count still determine the starting goal.
 
 **Status: test candidate. Game acceptance is pending. No public release yet.**
@@ -19,3 +21,9 @@ FastTurns and ShortEvents settings take effect next round and are controlled by 
 Close the game before removal. Remove only this mod's folder and its named container files, if included. Back up `Scripts/settings.dat` first to keep preferences. GraphicsProfiles does not restore graphics automatically on removal; use Restore previous before removal if required.
 
 Rejoin integration requires its matching layout/host-settings adapter and authority copies. That combined installation is unaccepted. Do not overwrite an active Rejoin runtime.
+
+## Community
+
+[![DooDesch Mods on Discord](https://mods.doodesch.de/img/card.png)](https://mods.doodesch.de)
+
+Join the DooDesch Mods Discord: update pings, polls on what comes next, and playtests of new mods.

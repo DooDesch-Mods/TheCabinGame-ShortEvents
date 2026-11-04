@@ -2,6 +2,8 @@
 
 > 🛟 **Need help or found a bug?** Get support at [support.doodesch.de/shortevents](https://support.doodesch.de/shortevents).
 
+[![Discord](https://mods.doodesch.de/img/badge.svg)](https://mods.doodesch.de)
+
 Reduces balloon and train tasks by about one third. Original difficulty and player count still determine the starting goal.
 
 ## Installation
@@ -29,3 +31,9 @@ Close the game. Back up `Mods/CabinShortEvents/Scripts/settings.dat` if you want
 Use Python 3.13. Install development dependencies with `python -m pip install -r requirements-dev.txt`, run `python -m unittest discover -s tests -v` and `python tests/check_lua.py`, then build with `python tools/package.py`.
 
 The builder writes a ZIP and checksum to `dist` using the committed overlay containers. See [publishing](docs/publishing.md) for release checks and [Nexus description](docs/nexus.md) for listing text.
+
+## Community
+
+[![DooDesch Mods on Discord](https://mods.doodesch.de/img/card.svg)](https://mods.doodesch.de)
+
+Join the DooDesch Mods Discord: update pings, polls on what comes next, and playtests of new mods.
